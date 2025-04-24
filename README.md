@@ -1,4 +1,4 @@
-# aps_bib_maker
+# bib_maker
 A simple python script that constructs a bib file from a list of DOIs.
 
 Usage: python3 bib_maker.py [options] input_file output_file.bib
