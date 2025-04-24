@@ -1,0 +1,72 @@
+# comments are ignored
+
+standardxraynuc 10.1103/PhysRevA.102.033710
+nonhermssh 10.1103/PhysRevB.97.045106
+
+
+emtransparency 10.1038/nature10741
+evers2021 10.1038/s41586-021-03276-x
+
+QuantumHall80 10.1103/PhysRevLett.45.494
+QuantumHall86 10.1103/RevModPhys.58.519
+SSHPaper 10.1103/PhysRevLett.42.1698
+lambshift 10.1126/science.1187770
+strongcoupling 10.1038/nphoton.2016.77
+Rabiosc 10.1038/s41566-017-0013-3
+xrayQO 10.1080/09500340.2012.752113
+Lu2014 10.1038/nphoton.2014.248
+Lentrodt2020 10.1103/PhysRevResearch.2.023396
+vcsels2021 10.1126/science.abj2232
+slowlight2015 10.1103/PhysRevLett.114.203601
+heeg2013vacuum 10.1103/PhysRevLett.111.073601
+Zeilinger2012 10.1103/RevModPhys.84.777
+
+emma2010 10.1038/nphoton.2010.176
+TopoPhotonics 10.1103/RevModPhys.91.015006
+GFTomasz 10.1103/PhysRevA.51.2545
+GFJohansson 10.1103/PhysRevB.83.195408
+inoutQO 10.1103/PhysRevA.95.033818
+FrontcouplingP 10.1103/PhysRevA.109.063702
+Wang24 10.1038/s41534-024-00807-y
+Wang2018 10.1103/PhysRevA.98.023808
+Pocock2018 10.1021/acsphotonics.8b00117
+toporeso 10.1038/ncomms9260
+topomech 10.1038/nphys2835
+topometa 10.1038/nphys3185
+topoacoust 10.1103/PhysRevLett.114.114301
+volovik2009 10.1093/acprof:oso/9780199564842.001.0001
+Cooper2008 10.1080/00018730802564122
+Eckardt2017 10.1103/RevModPhys.89.011004
+Dalibard2011 10.1103/RevModPhys.83.1523
+Haldane2008 10.1103/PhysRevLett.100.013904
+Wang2008 10.1103/PhysRevLett.100.013905
+Rechtsman2013a 10.1038/nature12066
+Rechtsman2013b 10.1103/PhysRevLett.111.103901
+Xiao2014 10.1103/PhysRevX.4.021017
+Ghareh2018 10.1103/PhysRevA.98.033830
+Parto2018 10.1103/PhysRevLett.120.113901
+stjean2017 10.1038/s41566-017-0006-2
+Zhao2018 10.1038/s41467-018-03434-2
+Barik2018 10.1126/science.aaq0327
+Perczel2017 10.1103/PhysRevLett.119.023603
+Perczel2020 10.1103/PhysRevLett.124.083603
+Asboth2016 10.1007/978-3-319-25607-8
+Heeg2013 10.1103/PhysRevA.88.043828
+Ralf2004 10.1007/b86125
+
+# some examples of entries without label, just the DOI
+10.1103/PhysRevA.109.063702
+10.1038/s41534-024-00807-y
+10.1103/PhysRevX.4.021017
+
+
+# test for arXiv entries
+
+#10.48550/arXiv.2403.06508
+FrontcouplingL 10.48550/arXiv.2403.06508
+
+10.1007/s00220-018-3229-2
+
+
+
+
