@@ -221,8 +221,8 @@ def process_bibfile():
         if label is None: # get label if it doesn't exist
             label = output[output.find('{')+1:output.find(',')]
 
-        if label.lower().find('arxiv') > -1: # shorten arXiv auto-labels
-            label = label[label.lower().find('arxiv'):]
+            if label.lower().find('arxiv') > -1: # shorten arXiv auto-labels
+                label = label[label.lower().find('arxiv'):]
 
         # check for repeated labels and correct if necessary 
         if label in all_labels:
