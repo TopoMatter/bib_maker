@@ -16,7 +16,9 @@ This is an attempt to `clean' existing bbl files, and it will fail if the
 code doesen't manage to find the DOIs.
 
 Options:
+
   -o, --overwrite  Overwrite the output file.
+  
   -h, --help       Print this message and exit.
 
 Note:
