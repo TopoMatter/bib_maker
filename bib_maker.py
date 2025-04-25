@@ -284,7 +284,6 @@ def process_bibfile():
         except:
             pass
 
-
         print(bib_entry.to_string('bibtex'))
         print(bib_entry.to_string('bibtex'), file=outfile)
         print('', file=outfile)
