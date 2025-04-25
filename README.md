@@ -1,9 +1,7 @@
 # bib_maker
 A simple python script that constructs a bib file from a list of DOIs.
 
-Usage: python3 bib_maker.py [options] input_file output_file.bib
-
-Construct a bib file out of the data stored in the input file. 
+Usage: ```python3 bib_maker.py [options] input_file output_file.bib```
 
 Types of input files:
 
@@ -15,11 +13,7 @@ extract all labels and DOIs, and use them to generate the output bib file.
 This is an attempt to `clean' existing bbl files, and it will fail if the
 code doesen't manage to find the DOIs.
 
-Options:
-
-  -o, --overwrite  Overwrite the output file.
-  
-  -h, --help       Print this message and exit.
+For more information: ```python3 bib.maker.py --help```
 
 Note:
   - This has been written using pybtex version 0.24.0
