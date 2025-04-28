@@ -5,6 +5,8 @@ import getopt
 import pybtex
 import string
 from pybtex.database import parse_file, BibliographyData, Entry
+from urllib.request import urlopen
+import re
 
 alphabet = string.ascii_lowercase
 
@@ -27,6 +29,7 @@ code doesen't manage to find the DOIs.
 Options:
   -o, --overwrite  Overwrite the output file.
   -h, --help       Print this message and exit.
+  -v, --verbose    Print text showing current progress.
 
 Note:
   - This has been written using pybtex version 0.24.0
@@ -39,6 +42,7 @@ Note:
 BIB_FILE = None
 INPUT_FILE = None
 OVERWRITE = False
+VERBOSE = True
 
 def rtfm(s):
     print( "bib_maker:", s)
@@ -47,13 +51,13 @@ def rtfm(s):
 
 
 def parse_args():
-    global BIB_FILE, INPUT_FILE, OVERWRITE
+    global BIB_FILE, INPUT_FILE, OVERWRITE, VERBOSE
 
     try:
         opts, remaining_args = \
             getopt.getopt(sys.argv[1:],
-                          "oh",
-                          ["overwrite", "help",])
+                          "ohv",
+                          ["overwrite", "help", "verbose",])
     except getopt.GetoptError:
         rtfm("unrecognized option")
 
@@ -73,6 +77,8 @@ def parse_args():
             sys.exit()
         if o in ("-o", "--overwrite"):
             OVERWRITE = True
+        if o in ("-v", "--verbose"):
+            VERBOSE = True
 
 
 def abbreviate_journal_names(bibfile):
@@ -105,7 +111,7 @@ def abbreviate_journal_names(bibfile):
         if item.fields["journal"].lower().find('arxiv') > -1:
             found_abbreviation = True 
 
-        if not found_abbreviation:
+        if not found_abbreviation and VERBOSE:
             print(f"{item.fields['journal']} not in list")
 
     bib.to_file(bibfile)
@@ -115,6 +121,9 @@ def extract_input_from_bbl(bblfilename,
                            outfilename='temp_input_from_bbl.txt'):
     """
     """
+    if VERBOSE:
+        print('Extracting labels and DOIs from bbl file')
+
     infile = open(bblfilename, 'r')
 
     all_labels = []
@@ -156,8 +165,9 @@ def extract_input_from_bbl(bblfilename,
             bibitem = bibitem[bibitem.find("\\doibase")+8:]
             DOI = bibitem[:bibitem.find("}")].strip()
 
-        # maybe there's a hyperlink that contains the DOI?
+        # try to find the DOI from the URL
         elif bibitem.find("\\href") > -1:
+            # maybe the URL contains the DOI in it
             ind_start = bibitem.find("/10.")
             if ind_start > -1 and bibitem[ind_start+8] == "/":
                 bibitem = bibitem[ind_start+1:]
@@ -168,7 +178,43 @@ def extract_input_from_bbl(bblfilename,
                 if DOI.rfind("?") > -1:
                     DOI = DOI[:DOI.rfind("?")]
 
+            # if it's an arXiv URL, scrape the website for the DOI
+            # and if it's been already published then use the published DOI
+            elif bibitem.find('arxiv.org/') > -1:
+                bibitem = bibitem[bibitem.find('arxiv.org/'):]
+                bibitem = bibitem[:bibitem.find('}')]
+
+                arXiv_numbers = re.findall(r'\d+', bibitem)
+                page = urlopen('https://arxiv.org/abs/' + 
+                                arXiv_numbers[0] + '.' + 
+                                arXiv_numbers[1])
+                html_bytes = page.read()
+                html = html_bytes.decode("utf-8")
+                if html.find('data-doi="') > -1:
+                    html = html[html.find('data-doi="')+10:]
+                    DOI = html[:html.find('"')]
+                elif html.find('id="arxiv-doi-link">') > -1:
+                    html = html[html.find('id="arxiv-doi-link">')+20:]
+                    DOI = html[:html.find('<')]
+
+            # if it's a URL from nature.com, extract the DOI from it
+            elif bibitem.find('www.nature.com/articles/') > -1:
+                bibitem = bibitem[
+                    bibitem.find('www.nature.com/articles/')+24:]
+                bibitem = bibitem[:bibitem.find('}')]
+                if bibitem[-4:] == '.pdf':
+                    bibitem = bibitem[:-4]
+                if bibitem.rfind('&') > -1:
+                    bibitem = bibitem[:bibitem.rfind('&')]
+                if bibitem.rfind('?') > -1:
+                    bibitem = bibitem[:bibitem.rfind('?')]
+
+                DOI = '10.1038/' + bibitem
+                
         all_DOIs.append(DOI)
+        
+        if VERBOSE:
+            print(label, DOI)
 
 
     outfile = open(outfilename, 'w')
@@ -184,6 +230,10 @@ def extract_input_from_bbl(bblfilename,
 def process_bibfile():
     """
     """
+
+    if VERBOSE:
+        print('Processing input file')
+
     myfile = open(INPUT_FILE, 'r')
 
     if OVERWRITE:
@@ -250,7 +300,8 @@ def process_bibfile():
                     bib_entry.entries[label].fields['DOI'].find('/'):
                                                        ][7:]
 
-            print(bib_entry.to_string('bibtex'))
+            if VERBOSE:
+                print(bib_entry.to_string('bibtex'))
 
             print(bib_entry.to_string('bibtex'), file=outfile)
             print('', file=outfile)
@@ -266,7 +317,9 @@ def process_bibfile():
             # manually add pages for some papers
             manual_page_journals = ['Physical Review', 
                                     'Reviews of Modern Physics',
-                                    'Science Advances'
+                                    'Science Advances',
+                                    'Science',
+                                    'SciPost Physics'
                                     ]
             for mpj in manual_page_journals:
                 if (bib_entry.entries[label].fields['journal'].find(
@@ -277,6 +330,19 @@ def process_bibfile():
                                                                ]
                 break
 
+            # in some cases (NCOMM), get the pages by scraping the journal site
+            scraping_page_journals = ['Nature Communications', 
+                                      ]
+            for spj in scraping_page_journals:
+                if (bib_entry.entries[label].fields['journal'].find(
+                                                                    spj) > -1):
+                    page = urlopen('http://dx.doi.org/' + DOI)
+                    html_bytes = page.read()
+                    html = html_bytes.decode("utf-8")
+                    html = html[html.find('"article-number">')+17:]
+                    bib_entry.entries[label].fields['pages'] = \
+                        html[:html.find('<')]
+
         # fix capitalization in titles
         try:
             bib_entry.entries[label].fields["title"] = "{" + \
@@ -284,7 +350,9 @@ def process_bibfile():
         except:
             pass
 
-        print(bib_entry.to_string('bibtex'))
+        if VERBOSE:
+            print(bib_entry.to_string('bibtex'))
+
         print(bib_entry.to_string('bibtex'), file=outfile)
         print('', file=outfile)
 
@@ -319,6 +387,7 @@ def process_bibfile():
 def main():
     """
     """
+
     parse_args()
 
     process_bibfile()
