@@ -1,4 +1,5 @@
 import pandas
+import numpy as np
 import sys
 import subprocess
 import getopt
@@ -319,7 +320,8 @@ def process_bibfile():
                                     'Reviews of Modern Physics',
                                     'Science Advances',
                                     'Science',
-                                    'SciPost Physics'
+                                    'SciPost Physics',
+                                    'Journal of the Physical Society of Japan'
                                     ]
             for mpj in manual_page_journals:
                 if (bib_entry.entries[label].fields['journal'].find(
@@ -328,7 +330,7 @@ def process_bibfile():
                         bib_entry.entries[label].fields['DOI'][
                            bib_entry.entries[label].fields['DOI'].rfind('.')+1:
                                                                ]
-                break
+
 
             # in some cases (NCOMM), get the pages by scraping the journal site
             scraping_page_journals = ['Nature Communications', 
@@ -349,6 +351,34 @@ def process_bibfile():
                 bib_entry.entries[label].fields["title"] + "}"
         except:
             pass
+
+
+        # check if titles have mml:math and change to regular text
+        fix_title = True
+        mytitle = bib_entry.entries[label].fields["title"]
+
+        while fix_title:
+            ind1 = mytitle.find('<mml')
+            temptitle = mytitle[ind1+3:]
+            ind2 = temptitle.find('>')
+            if ind2 > -1 and ind1 > -1:
+                mytitle = mytitle[:ind1] + temptitle[ind2+1:]
+                fix_title = True
+            else:
+                fix_title = False
+
+        fix_title = True
+        while fix_title:
+            ind1 = mytitle.find('</mml')
+            temptitle = mytitle[ind1+4:]
+            ind2 = temptitle.find('>')
+            if ind2 > -1 and ind1 > -1:
+                mytitle = mytitle[:ind1] + temptitle[ind2+1:]
+                fix_title = True
+            else:
+                fix_title = False
+
+        bib_entry.entries[label].fields["title"] = mytitle
 
         if VERBOSE:
             print(bib_entry.to_string('bibtex'))
