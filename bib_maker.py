@@ -169,6 +169,11 @@ def extract_input_from_bbl(bblfilename,
         # try to find the DOI from the URL
         elif bibitem.find("\\href") > -1:
             # maybe the URL contains the DOI in it
+            ind_start = bibitem.find("doi.org/")
+            if ind_start > -1:
+                bibitem = bibitem[ind_start+8:]
+                DOI = bibitem[:bibitem.find("}")].strip()
+
             ind_start = bibitem.find("/10.")
             if ind_start > -1 and bibitem[ind_start+8] == "/":
                 bibitem = bibitem[ind_start+1:]
@@ -325,25 +330,41 @@ def process_bibfile():
                                     ]
             for mpj in manual_page_journals:
                 if (bib_entry.entries[label].fields['journal'].find(
-                                            mpj) > -1):
+                                            mpj) == 0):
                     bib_entry.entries[label].fields['pages'] = \
                         bib_entry.entries[label].fields['DOI'][
                            bib_entry.entries[label].fields['DOI'].rfind('.')+1:
                                                                ]
 
+            # some pages need extra work when they are manually added
+            manual_page_journals2 = ['Proceedings of the National Academy of Sciences', 
+                                    ]
+            for mpj2 in manual_page_journals2:
+                if (bib_entry.entries[label].fields['journal'].find(
+                                            mpj2) == 0):
+                    bib_entry.entries[label].fields['pages'] = 'e' + \
+                        bib_entry.entries[label].fields['DOI'][
+                           bib_entry.entries[label].fields['DOI'].rfind('.')+1:
+                                                               ]
 
-            # in some cases (NCOMM), get the pages by scraping the journal site
+            # in some cases, get the pages by scraping the journal site
             scraping_page_journals = ['Nature Communications', 
+                                      'Communications Physics',
+                                      'npj Quantum Materials',
+                                      'Science China Physics, Mechanics'
                                       ]
             for spj in scraping_page_journals:
                 if (bib_entry.entries[label].fields['journal'].find(
-                                                                    spj) > -1):
-                    page = urlopen('http://dx.doi.org/' + DOI)
-                    html_bytes = page.read()
-                    html = html_bytes.decode("utf-8")
-                    html = html[html.find('"article-number">')+17:]
-                    bib_entry.entries[label].fields['pages'] = \
-                        html[:html.find('<')]
+                                                                    spj) == 0):
+                    try:
+                        page = urlopen('http://dx.doi.org/' + DOI)
+                        html_bytes = page.read()
+                        html = html_bytes.decode("utf-8")
+                        html = html[html.find('"article-number">')+17:]
+                        bib_entry.entries[label].fields['pages'] = \
+                            html[:html.find('<')]
+                    except:
+                        pass
 
             # some journals are pageless
             pageless_journals = ['Journal of High Energy Physics', 
