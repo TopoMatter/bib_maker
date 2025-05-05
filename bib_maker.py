@@ -345,6 +345,14 @@ def process_bibfile():
                     bib_entry.entries[label].fields['pages'] = \
                         html[:html.find('<')]
 
+            # some journals are pageless
+            pageless_journals = ['Journal of High Energy Physics', 
+                                 ]
+            for pj in pageless_journals:
+                if (bib_entry.entries[label].fields['journal'].find(
+                                            mpj) > -1):
+                    bib_entry.entries[label].fields['pages'] = ' '
+
         # fix capitalization in titles
         try:
             bib_entry.entries[label].fields["title"] = "{" + \
@@ -354,31 +362,32 @@ def process_bibfile():
 
 
         # check if titles have mml:math and change to regular text
-        fix_title = True
-        mytitle = bib_entry.entries[label].fields["title"]
+        if "title" in bib_entry.entries[label].fields:
+            fix_title = True
+            mytitle = bib_entry.entries[label].fields["title"]
 
-        while fix_title:
-            ind1 = mytitle.find('<mml')
-            temptitle = mytitle[ind1+3:]
-            ind2 = temptitle.find('>')
-            if ind2 > -1 and ind1 > -1:
-                mytitle = mytitle[:ind1] + temptitle[ind2+1:]
-                fix_title = True
-            else:
-                fix_title = False
+            while fix_title:
+                ind1 = mytitle.find('<mml')
+                temptitle = mytitle[ind1+3:]
+                ind2 = temptitle.find('>')
+                if ind2 > -1 and ind1 > -1:
+                    mytitle = mytitle[:ind1] + temptitle[ind2+1:]
+                    fix_title = True
+                else:
+                    fix_title = False
 
-        fix_title = True
-        while fix_title:
-            ind1 = mytitle.find('</mml')
-            temptitle = mytitle[ind1+4:]
-            ind2 = temptitle.find('>')
-            if ind2 > -1 and ind1 > -1:
-                mytitle = mytitle[:ind1] + temptitle[ind2+1:]
-                fix_title = True
-            else:
-                fix_title = False
+            fix_title = True
+            while fix_title:
+                ind1 = mytitle.find('</mml')
+                temptitle = mytitle[ind1+4:]
+                ind2 = temptitle.find('>')
+                if ind2 > -1 and ind1 > -1:
+                    mytitle = mytitle[:ind1] + temptitle[ind2+1:]
+                    fix_title = True
+                else:
+                    fix_title = False
 
-        bib_entry.entries[label].fields["title"] = mytitle
+            bib_entry.entries[label].fields["title"] = mytitle
 
         if VERBOSE:
             print(bib_entry.to_string('bibtex'))
