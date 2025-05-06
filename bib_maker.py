@@ -353,7 +353,8 @@ def process_bibfile():
                                     'Science Advances',
                                     'Science',
                                     'SciPost Physics',
-                                    'Journal of the Physical Society of Japan'
+                                    'Journal of the Physical Society of Japan',
+                                    'Advanced Materials',
                                     ]
             for mpj in manual_page_journals:
                 if (bib_entry.entries[label].fields['journal'].find(
@@ -378,7 +379,7 @@ def process_bibfile():
             scraping_page_journals = ['Nature Communications', 
                                       'Communications Physics',
                                       'npj Quantum Materials',
-                                      'Science China Physics, Mechanics'
+                                      'Science China Physics, Mechanics',
                                       ]
             for spj in scraping_page_journals:
                 if (bib_entry.entries[label].fields['journal'].find(
@@ -398,7 +399,7 @@ def process_bibfile():
                                  ]
             for pj in pageless_journals:
                 if (bib_entry.entries[label].fields['journal'].find(
-                                            mpj) > -1):
+                                            pj) == 0):
                     bib_entry.entries[label].fields['pages'] = ' '
 
         # fix capitalization in titles
