@@ -97,7 +97,7 @@ def parse_args():
 
     if INPUT_FILE[-4:] == '.bbl':
         extract_input_from_bbl(INPUT_FILE)
-        INPUT_FILE = 'temp_input_from_bbl.txt'
+        INPUT_FILE = 'temp.txt'
 
     for o, a in opts:
         if o in ("-h", "--help"):
@@ -145,8 +145,33 @@ def abbreviate_journal_names(bibfile):
     bib.to_file(bibfile)
 
 
+def get_DOI_from_arXiv(b2):
+    """
+    """
+    DOI = 'DOI_NOT_FOUND'
+
+    arXiv_numbers = re.findall(r'\d+', b2)
+    try: # old arXiv papers have only one number, need to implement
+        page = urlopen('https://arxiv.org/abs/' + 
+                        arXiv_numbers[0] + '.' + 
+                        arXiv_numbers[1])
+        html_bytes = page.read()
+        html = html_bytes.decode("utf-8")
+        if html.find('data-doi="') > -1:
+            html = html[html.find('data-doi="')+10:]
+            DOI = html[:html.find('"')]
+
+        elif html.find('id="arxiv-doi-link">') > -1:
+            html = html[html.find('id="arxiv-doi-link">')+20:]
+            DOI = html[:html.find('<')]
+    except:
+        pass
+    
+    return DOI
+
+
 def extract_input_from_bbl(bblfilename, 
-                           outfilename='temp_input_from_bbl.txt'):
+                           outfilename='temp.txt'):
     """
     """
     if VERBOSE:
@@ -193,57 +218,74 @@ def extract_input_from_bbl(bblfilename,
             bibitem = bibitem[bibitem.find("\\doibase")+8:]
             DOI = bibitem[:bibitem.find("}")].strip()
 
+            if DOI.lower().find('arxiv') > -1:
+                DOI = DOI[DOI.lower().find('arxiv'):]
+                DOI = get_DOI_from_arXiv(b2)
+
         # try to find the DOI from the URL
         elif bibitem.find("\\href") > -1:
-            # maybe the URL contains the DOI in it
-            ind_start = bibitem.find("doi.org/")
-            if ind_start > -1:
-                bibitem = bibitem[ind_start+8:]
-                DOI = bibitem[:bibitem.find("}")].strip()
+            b2 = bibitem[bibitem.find("\\href")+5:]
+            b2 = b2[:b2.find("}")]
 
-            ind_start = bibitem.find("/10.")
-            if ind_start > -1 and bibitem[ind_start+8] == "/":
-                bibitem = bibitem[ind_start+1:]
-                DOI = bibitem[:bibitem.find("}")].strip()
-                # trim extra bits after the DOI in the url
+            # maybe the URL contains the DOI in it
+            if b2.find("doi.org/") > -1:
+                b2 = b2[b2.find("doi.org/")+8:]
+                DOI = b2.strip()
+
+                if DOI.lower().find('arxiv') > -1:
+                    DOI = DOI[DOI.lower().find('arxiv'):]
+                    DOI = get_DOI_from_arXiv(b2)
+
+
+            elif b2.find("/10.") > -1 and b2[b2.find("/10.")+8] == "/":
+                b2 = b2[b2.find("/10.")+1:]
+                DOI = b2.strip()
+
+                if DOI.lower().find('arxiv') > -1:
+                    DOI = DOI[DOI.lower().find('arxiv'):]
+                    DOI = get_DOI_from_arXiv(b2)
+
+
+                # trim extra bits after the DOI in the URL
                 if DOI.rfind("&") > -1:
                     DOI = DOI[:DOI.rfind("&")]
                 if DOI.rfind("?") > -1:
                     DOI = DOI[:DOI.rfind("?")]
 
-            # if it's an arXiv URL, scrape the website for the DOI
+            # if there's an arXiv URL, scrape the website for the DOI
             # and if it's been already published then use the published DOI
-            elif bibitem.find('arxiv.org/') > -1:
-                bibitem = bibitem[bibitem.find('arxiv.org/'):]
-                bibitem = bibitem[:bibitem.find('}')]
-
-                arXiv_numbers = re.findall(r'\d+', bibitem)
-                page = urlopen('https://arxiv.org/abs/' + 
-                                arXiv_numbers[0] + '.' + 
-                                arXiv_numbers[1])
-                html_bytes = page.read()
-                html = html_bytes.decode("utf-8")
-                if html.find('data-doi="') > -1:
-                    html = html[html.find('data-doi="')+10:]
-                    DOI = html[:html.find('"')]
-                elif html.find('id="arxiv-doi-link">') > -1:
-                    html = html[html.find('id="arxiv-doi-link">')+20:]
-                    DOI = html[:html.find('<')]
+            elif b2.find('arxiv.org/') > -1:
+                b2 = b2[b2.find('arxiv.org/'):]
+                DOI = get_DOI_from_arXiv(b2)
 
             # if it's a URL from nature.com, extract the DOI from it
-            elif bibitem.find('www.nature.com/articles/') > -1:
-                bibitem = bibitem[
-                    bibitem.find('www.nature.com/articles/')+24:]
-                bibitem = bibitem[:bibitem.find('}')]
-                if bibitem[-4:] == '.pdf':
-                    bibitem = bibitem[:-4]
-                if bibitem.rfind('&') > -1:
-                    bibitem = bibitem[:bibitem.rfind('&')]
-                if bibitem.rfind('?') > -1:
-                    bibitem = bibitem[:bibitem.rfind('?')]
+            elif b2.find('www.nature.com/articles/') > -1:
+                b2 = b2[b2.find('www.nature.com/articles/')+24:]
 
-                DOI = '10.1038/' + bibitem
-                
+                if b2[-4:] == '.pdf':
+                    b2 = b2[:-4]
+                if b2.rfind('&') > -1:
+                    b2 = b2[:b2.rfind('&')]
+                if b2.rfind('?') > -1:
+                    b2 = b2[:b2.rfind('?')]
+
+                DOI = '10.1038/' + b2
+
+        # DOI not found using href, but there is an Eprint
+        if DOI == 'DOI_NOT_FOUND' and bibitem.find("\\Eprint") > -1:
+            b2 = bibitem[bibitem.find("\\Eprint")+7:]
+            b2 = b2[:b2.find("}")]
+            DOI = get_DOI_from_arXiv(b2)
+
+        # DOI not found using href or Eprint, but maybe arXiv in journal name
+        if DOI == 'DOI_NOT_FOUND' and bibitem.find("{journal}") > -1:
+            b2 = bibitem[bibitem.rfind("{journal}")+9:]
+            b2 = b2[:b2.find("}")]
+
+            if b2.lower().find('arxiv:') > -1:
+                b2 = b2[b2.lower().find('arxiv:'):]
+                DOI = get_DOI_from_arXiv(b2)
+
         all_DOIs.append(DOI)
         
         if VERBOSE:
@@ -356,6 +398,7 @@ def process_bibfile():
                                     'Journal of the Physical Society of Japan',
                                     'Advanced Materials',
                                     ]
+
             for mpj in manual_page_journals:
                 if (bib_entry.entries[label].fields['journal'].find(
                                             mpj) == 0):
@@ -367,6 +410,7 @@ def process_bibfile():
             # some pages need extra work when they are manually added
             manual_page_journals2 = ['Proceedings of the National Academy of Sciences', 
                                     ]
+
             for mpj2 in manual_page_journals2:
                 if (bib_entry.entries[label].fields['journal'].find(
                                             mpj2) == 0):
@@ -379,8 +423,13 @@ def process_bibfile():
             scraping_page_journals = ['Nature Communications', 
                                       'Communications Physics',
                                       'npj Quantum Materials',
+                                      'npj Computational Materials',
                                       'Science China Physics, Mechanics',
+                                      'The European Physical Journal',
+                                      'Journal of High Energy Physics', 
+                                      'Scientific Reports',
                                       ]
+
             for spj in scraping_page_journals:
                 if (bib_entry.entries[label].fields['journal'].find(
                                                                     spj) == 0):
@@ -394,13 +443,6 @@ def process_bibfile():
                     except:
                         pass
 
-            # some journals are pageless
-            pageless_journals = ['Journal of High Energy Physics', 
-                                 ]
-            for pj in pageless_journals:
-                if (bib_entry.entries[label].fields['journal'].find(
-                                            pj) == 0):
-                    bib_entry.entries[label].fields['pages'] = ' '
 
         # fix capitalization in titles
         try:
