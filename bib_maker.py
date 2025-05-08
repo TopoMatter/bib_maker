@@ -35,6 +35,7 @@ import string
 from pybtex.database import parse_file, BibliographyData, Entry
 from urllib.request import urlopen
 import re
+import os
 
 alphabet = string.ascii_lowercase
 
@@ -55,9 +56,17 @@ This is an attempt to `clean' existing bbl files, and it will fail if the
 code doesen't manage to find the DOIs.
 
 Options:
-  -o, --overwrite  Overwrite the output file.
-  -h, --help       Print this message and exit.
-  -v, --verbose    Print text showing current progress.
+  -o, --overwrite       Overwrite the output file.
+
+  -h, --help            Print this message and exit.
+
+  -v, --verbose         Print text showing current progress.
+
+  -e, --experimental    Use the `lynx' terminal browser to scrape some journal
+                        websites that cannot be easily accessed using urlopen.
+
+  -f, --force           Proceed with processing the DOIs even if not all were
+                        found in the bib file.
 
 Note:
   - This has been written using pybtex version 0.24.0
@@ -71,6 +80,10 @@ BIB_FILE = None
 INPUT_FILE = None
 OVERWRITE = False
 VERBOSE = True
+FORCE = True
+
+### SET THIS TO TRUE AT YOUR OWN PERIL !!! ###
+EXPERIMENTAL = True
 
 def rtfm(s):
     print( "bib_maker:", s)
@@ -79,13 +92,14 @@ def rtfm(s):
 
 
 def parse_args():
-    global BIB_FILE, INPUT_FILE, OVERWRITE, VERBOSE
+    global BIB_FILE, INPUT_FILE, OVERWRITE, VERBOSE, EXPERIMENTAL, FORCE
 
     try:
         opts, remaining_args = \
             getopt.getopt(sys.argv[1:],
-                          "ohv",
-                          ["overwrite", "help", "verbose",])
+                          "ohvef",
+                          ["overwrite", "help", "verbose",
+                           "experimental", "force"])
     except getopt.GetoptError:
         rtfm("unrecognized option")
 
@@ -107,6 +121,10 @@ def parse_args():
             OVERWRITE = True
         if o in ("-v", "--verbose"):
             VERBOSE = True
+        if o in ("-e", "--experimental"):
+            EXPERIMENTAL = True
+        if o in ("-f", "--force"):
+            FORCE = True
 
 
 def abbreviate_journal_names(bibfile):
@@ -170,12 +188,65 @@ def get_DOI_from_arXiv(b2):
     return DOI
 
 
+def get_DOI_using_lynx(url, site_type):
+    """
+    """
+    sites_type_1 = ['sciencedirect.com',
+                    ]
+
+    if site_type in sites_type_1:
+        os.system('lynx --source "' + url +
+                  '" > temppage.html')
+
+        journalsite = open('temppage.html', 'r')
+        ft = ""
+        for myline in journalsite.readlines():
+            ft += myline
+
+        journalsite.close()
+        os.system('rm temppage.html')
+
+        if ft.find('<meta name="citation_doi" content="') > -1:
+            ft = ft[ft.find('<meta name="citation_doi" content="')+35:]
+            DOI = ft[:ft.find('"')]
+            return DOI
+
+    return 'DOI_NOT_FOUND'
+
+
+def get_pages_using_lynx(url, journal):
+    """
+    """
+    journals_type_1 = ['Applied Physics Letters',
+                      ]
+
+    if journal in journals_type_1:
+        os.system('lynx --source "' + url +
+                  '" > temppage.html')
+
+        journalsite = open('temppage.html', 'r')
+        ft = ""
+        for myline in journalsite.readlines():
+            ft += myline
+
+        journalsite.close()
+        os.system('rm temppage.html')
+
+        if ft.find('"pageStart":"') > -1:
+            ft = ft[ft.find('"pageStart":"')+13:]
+            pages = ft[:ft.find('"')]
+            return pages
+
+    return None
+
+
 def extract_input_from_bbl(bblfilename, 
                            outfilename='temp.txt'):
     """
     """
     if VERBOSE:
-        print('Extracting labels and DOIs from bbl file')
+        print('### Extracting labels and DOIs from bbl file')
+        print()
 
     infile = open(bblfilename, 'r')
 
@@ -271,6 +342,13 @@ def extract_input_from_bbl(bblfilename,
 
                 DOI = '10.1038/' + b2
 
+            elif b2.find('sciencedirect.com') > -1:
+                if EXPERIMENTAL:
+                    if b2.find('{') > -1:
+                        b2 = b2[b2.find('{')+1:]
+
+                    DOI = get_DOI_using_lynx(b2.strip(), 'sciencedirect.com')
+
         # DOI not found using href, but there is an Eprint
         if DOI == 'DOI_NOT_FOUND' and bibitem.find("\\Eprint") > -1:
             b2 = bibitem[bibitem.find("\\Eprint")+7:]
@@ -298,7 +376,7 @@ def extract_input_from_bbl(bblfilename,
 
     outfile.close()
 
-    if "DOI_NOT_FOUND" in all_DOIs:
+    if ("DOI_NOT_FOUND" in all_DOIs) and (FORCE == False):
         rtfm("couldn't find all DOIs. Input file needs manual cleanup.")
 
 
@@ -307,7 +385,8 @@ def process_bibfile():
     """
 
     if VERBOSE:
-        print('Processing input file')
+        print('### Processing input file')
+        print()
 
     myfile = open(INPUT_FILE, 'r')
 
@@ -446,6 +525,17 @@ def process_bibfile():
                     except:
                         pass
 
+            # scraping some of the websites does not work directly in urlopen
+            # so we use the terminal browser lynx
+            experimental_page_journals = ['Applied Physics Letters',
+                                          ]
+
+            if EXPERIMENTAL:
+                for epj in experimental_page_journals:
+                    pages = get_pages_using_lynx('http://dx.doi.org/' + DOI,
+                                                 epj)
+                    if pages is not None:
+                        bib_entry.entries[label].fields['pages'] = pages
 
         # fix capitalization in titles
         try:
