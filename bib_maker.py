@@ -336,6 +336,9 @@ def process_bibfile():
         if DOI.lower().find('doi.org') > -1:
             DOI = DOI[DOI.lower().find('doi.org')+8:]
 
+        if DOI == 'DOI_NOT_FOUND':
+            continue
+
         exitcode, output = subprocess.getstatusoutput(
                 f'curl -LH "Accept: application/x-bibtex" "http://dx.doi.org/' 
                                                         + DOI + '"')
