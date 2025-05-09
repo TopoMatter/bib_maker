@@ -457,6 +457,13 @@ def process_bibfile():
                     bib_entry.entries[label].fields['DOI'].find('/'):
                                                        ][7:]
 
+            # fix capitalization in titles
+            try:
+                bib_entry.entries[label].fields["title"] = "{" + \
+                    bib_entry.entries[label].fields["title"] + "}"
+            except:
+                pass
+
             if VERBOSE:
                 print(bib_entry.to_string('bibtex'))
 
@@ -532,10 +539,12 @@ def process_bibfile():
 
             if EXPERIMENTAL:
                 for epj in experimental_page_journals:
-                    pages = get_pages_using_lynx('http://dx.doi.org/' + DOI,
-                                                 epj)
-                    if pages is not None:
-                        bib_entry.entries[label].fields['pages'] = pages
+                    if (bib_entry.entries[label].fields['journal'].find(
+                                                                    epj) == 0):
+                        pages = get_pages_using_lynx('http://dx.doi.org/' 
+                                                     + DOI, epj)
+                        if pages is not None:
+                            bib_entry.entries[label].fields['pages'] = pages
 
         # fix capitalization in titles
         try:
