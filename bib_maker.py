@@ -76,11 +76,19 @@ Note:
 """
 )
 
+DEBUG_MODE = True # set this to false in the final version
+
 BIB_FILE = None
 INPUT_FILE = None
 OVERWRITE = False
-VERBOSE = True
-FORCE = True
+VERBOSE = False
+FORCE = False
+
+if DEBUG_MODE:
+    OVERWRITE = True
+    VERBOSE = True
+    FORCE = True
+
 
 ### SET THIS TO TRUE AT YOUR OWN PERIL !!! ###
 EXPERIMENTAL = True
@@ -481,11 +489,9 @@ def process_bibfile():
             # manually add pages for some papers
             manual_page_journals = ['Physical Review', 
                                     'Reviews of Modern Physics',
-                                    'Science Advances',
                                     'Science',
                                     'SciPost Physics',
                                     'Journal of the Physical Society of Japan',
-                                    'Advanced Materials',
                                     ]
 
             for mpj in manual_page_journals:
@@ -498,6 +504,7 @@ def process_bibfile():
 
             # some pages need extra work when they are manually added
             manual_page_journals2 = ['Proceedings of the National Academy of Sciences', 
+                                     'Science Advances',
                                     ]
 
             for mpj2 in manual_page_journals2:
@@ -507,6 +514,21 @@ def process_bibfile():
                         bib_entry.entries[label].fields['DOI'][
                            bib_entry.entries[label].fields['DOI'].rfind('.')+1:
                                                                ]
+
+            manual_page_journals3 = ['Advanced Materials',
+                                     'Advanced Functional Materials',
+                                     'Advanced Materials Interfaces',
+                                     'Small',
+                                     ]
+
+            for mpj3 in manual_page_journals3:
+                if (bib_entry.entries[label].fields['journal'].find(
+                                            mpj3) == 0):
+                    bib_entry.entries[label].fields['pages'] = \
+                        bib_entry.entries[label].fields['DOI'][
+                           bib_entry.entries[label].fields['DOI'].rfind('.')+3:
+                                                               ]
+
 
             # in some cases, get the pages by scraping the journal site
             scraping_page_journals = ['Nature Communications', 
