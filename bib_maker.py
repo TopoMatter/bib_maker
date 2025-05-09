@@ -226,6 +226,7 @@ def get_pages_using_lynx(url, journal):
     """
     """
     journals_type_1 = ['Applied Physics Letters',
+                       'Journal of Mathematical Physics',
                       ]
 
     if journal in journals_type_1:
@@ -489,9 +490,9 @@ def process_bibfile():
             # manually add pages for some papers
             manual_page_journals = ['Physical Review', 
                                     'Reviews of Modern Physics',
-                                    'Science',
                                     'SciPost Physics',
                                     'Journal of the Physical Society of Japan',
+                                    'PRX Quantum',
                                     ]
 
             for mpj in manual_page_journals:
@@ -505,6 +506,7 @@ def process_bibfile():
             # some pages need extra work when they are manually added
             manual_page_journals2 = ['Proceedings of the National Academy of Sciences', 
                                      'Science Advances',
+                                     'Science',
                                     ]
 
             for mpj2 in manual_page_journals2:
@@ -539,6 +541,7 @@ def process_bibfile():
                                       'The European Physical Journal',
                                       'Journal of High Energy Physics', 
                                       'Scientific Reports',
+                                      'Frontiers of Physics',
                                       ]
 
             for spj in scraping_page_journals:
@@ -557,6 +560,7 @@ def process_bibfile():
             # scraping some of the websites does not work directly in urlopen
             # so we use the terminal browser lynx
             experimental_page_journals = ['Applied Physics Letters',
+                                          'Journal of Mathematical Physics',
                                           ]
 
             if EXPERIMENTAL:
