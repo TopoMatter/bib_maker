@@ -229,6 +229,7 @@ def get_pages_using_lynx(url, journal):
                        'Journal of Mathematical Physics',
                        'AIP Advances',
                        'Review of Scientific Instruments',
+                       'Journal of Applied Physics',
                       ]
 
     if journal in journals_type_1:
@@ -408,6 +409,8 @@ def process_bibfile():
 
     all_labels = []
 
+    missing_pages = []
+
     for myline in myfile.readlines():
         if len(myline) < 2 or myline[0] == '#': # empty line or comment
             continue
@@ -513,8 +516,10 @@ def process_bibfile():
                                                                ]
 
             # some pages need extra work when they are manually added
-            manual_page_journals2 = ['Proceedings of the National Academy of Sciences', 
-                                     'Science Advances',
+            # 'Proceedings of the National Academy of Sciences' has been
+            # removed from this list because different articles have different
+            # page formats
+            manual_page_journals2 = ['Science Advances',
                                      'Science',
                                     ]
 
@@ -552,6 +557,7 @@ def process_bibfile():
                                       'Scientific Reports',
                                       'Frontiers of Physics',
                                       'Nature Reviews Materials',
+                                      'Quantum Frontiers',
                                       ]
 
             for spj in scraping_page_journals:
@@ -573,6 +579,7 @@ def process_bibfile():
                                           'Journal of Mathematical Physics',
                                           'AIP Advances',
                                           'Review of Scientific Instruments',
+                                          'Journal of Applied Physics',
                                           ]
 
             if EXPERIMENTAL:
@@ -620,6 +627,9 @@ def process_bibfile():
 
             bib_entry.entries[label].fields["title"] = mytitle
 
+        if "pages" not in bib_entry.entries[label].fields:
+            missing_pages.append((label, 'http://dx.doi.org/' + DOI))
+
         if VERBOSE:
             print(bib_entry.to_string('bibtex'))
 
@@ -628,7 +638,9 @@ def process_bibfile():
 
     outfile.close()
 
-
+    print("### Could not fill in 'pages' field for:")
+    for myitem in missing_pages:
+        print(myitem[0], myitem[1])
 
 
 
