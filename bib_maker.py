@@ -551,6 +551,7 @@ def process_bibfile():
                                       'Journal of High Energy Physics', 
                                       'Scientific Reports',
                                       'Frontiers of Physics',
+                                      'Nature Reviews Materials',
                                       ]
 
             for spj in scraping_page_journals:
