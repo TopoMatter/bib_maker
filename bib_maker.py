@@ -230,6 +230,7 @@ def get_pages_using_lynx(url, journal):
                        'AIP Advances',
                        'Review of Scientific Instruments',
                        'Journal of Applied Physics',
+                       'The Journal of Chemical Physics',
                       ]
 
     if journal in journals_type_1:
@@ -583,6 +584,7 @@ def process_bibfile():
                                           'AIP Advances',
                                           'Review of Scientific Instruments',
                                           'Journal of Applied Physics',
+                                          'The Journal of Chemical Physics',
                                           ]
 
             if EXPERIMENTAL:
