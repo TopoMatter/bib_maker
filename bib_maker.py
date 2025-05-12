@@ -227,6 +227,8 @@ def get_pages_using_lynx(url, journal):
     """
     journals_type_1 = ['Applied Physics Letters',
                        'Journal of Mathematical Physics',
+                       'AIP Advances',
+                       'Review of Scientific Instruments',
                       ]
 
     if journal in journals_type_1:
@@ -568,6 +570,8 @@ def process_bibfile():
             # so we use the terminal browser lynx
             experimental_page_journals = ['Applied Physics Letters',
                                           'Journal of Mathematical Physics',
+                                          'AIP Advances',
+                                          'Review of Scientific Instruments',
                                           ]
 
             if EXPERIMENTAL:
