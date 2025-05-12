@@ -441,6 +441,8 @@ def process_bibfile():
 
         # the DOI is wrong
         if output.find('This DOI cannot be found in the DOI System.') > -1:
+            if not FORCE:
+                rtfm(DOI + ' not found.')
             if VERBOSE:
                 print('### ' + DOI + ' not found.')
 
@@ -638,9 +640,10 @@ def process_bibfile():
 
     outfile.close()
 
-    print("### Could not fill in 'pages' field for:")
-    for myitem in missing_pages:
-        print(myitem[0], myitem[1])
+    if len(missing_pages) > 0:
+        print("### Could not fill in 'pages' field for:")
+        for myitem in missing_pages:
+            print(myitem[0], myitem[1])
 
 
 
