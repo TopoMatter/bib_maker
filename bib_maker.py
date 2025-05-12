@@ -522,8 +522,8 @@ def process_bibfile():
             # 'Proceedings of the National Academy of Sciences' has been
             # removed from this list because different articles have different
             # page formats
+            # same for 'Science'.
             manual_page_journals2 = ['Science Advances',
-                                     'Science',
                                     ]
 
             for mpj2 in manual_page_journals2:
