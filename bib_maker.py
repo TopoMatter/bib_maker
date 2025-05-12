@@ -553,6 +553,7 @@ def process_bibfile():
                                       'Communications Physics',
                                       'npj Quantum Materials',
                                       'npj Computational Materials',
+                                      'npj Quantum Information',
                                       'Science China Physics, Mechanics',
                                       'The European Physical Journal',
                                       'Journal of High Energy Physics', 
