@@ -434,6 +434,13 @@ def process_bibfile():
         # skip to the relevant part of the output
         output = output[output.find('@'):]
 
+        # the DOI is wrong
+        if output.find('This DOI cannot be found in the DOI System.') > -1:
+            if VERBOSE:
+                print('### ' + DOI + ' not found.')
+
+            continue
+
         if label is None: # get label if it doesn't exist
             label = output[output.find('{')+1:output.find(',')]
 
