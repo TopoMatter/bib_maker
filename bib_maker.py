@@ -234,16 +234,11 @@ def get_pages_using_lynx(url, journal):
                       ]
 
     if journal in journals_type_1:
-        os.system('lynx --source "' + url +
-                  '" > temppage.html')
+        s = subprocess.run(['lynx', '--source', url], 
+                           stdout=subprocess.PIPE, stderr=subprocess.PIPE, 
+                           text=True, check=True)
 
-        journalsite = open('temppage.html', 'r')
-        ft = ""
-        for myline in journalsite.readlines():
-            ft += myline
-
-        journalsite.close()
-        os.system('rm temppage.html')
+        ft = s.stdout
 
         if ft.find('"pageStart":"') > -1:
             ft = ft[ft.find('"pageStart":"')+13:]
@@ -552,6 +547,7 @@ def process_bibfile():
 
 
             # in some cases, get the pages by scraping the journal site
+            # "Light: Science" stands for "Light: Science \&amp; Applications"
             scraping_page_journals = ['Nature Communications', 
                                       'Communications Physics',
                                       'npj Quantum Materials',
@@ -564,6 +560,7 @@ def process_bibfile():
                                       'Frontiers of Physics',
                                       'Nature Reviews Materials',
                                       'Quantum Frontiers',
+                                      'Light: Science',
                                       ]
 
             for spj in scraping_page_journals:
