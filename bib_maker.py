@@ -323,6 +323,9 @@ def extract_input_from_bbl(bblfilename,
 
             elif b2.find("/10.") > -1 and b2[b2.find("/10.")+8] == "/":
                 b2 = b2[b2.find("/10.")+1:]
+                if b2.rfind('/meta') > -1:
+                    b2 = b2[:b2.rfind('/meta')]
+
                 DOI = b2.strip()
 
                 if DOI.lower().find('arxiv') > -1:
