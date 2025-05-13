@@ -505,6 +505,7 @@ def process_bibfile():
                                     'SciPost Physics',
                                     'Journal of the Physical Society of Japan',
                                     'PRX Quantum',
+                                    'Advances in Physics: X',
                                     ]
 
             for mpj in manual_page_journals:
