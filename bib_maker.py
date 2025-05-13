@@ -310,7 +310,6 @@ def extract_input_from_bbl(bblfilename,
         elif bibitem.find("\\href") > -1:
             b2 = bibitem[bibitem.find("\\href")+5:]
             b2 = b2[:b2.find("}")]
-
             # maybe the URL contains the DOI in it
             if b2.find("doi.org/") > -1:
                 b2 = b2[b2.find("doi.org/")+8:]
@@ -318,7 +317,7 @@ def extract_input_from_bbl(bblfilename,
 
                 if DOI.lower().find('arxiv') > -1:
                     DOI = DOI[DOI.lower().find('arxiv'):]
-                    DOI = get_DOI_from_arXiv(b2)
+                    DOI = get_DOI_from_arXiv(DOI)
 
 
             elif b2.find("/10.") > -1 and b2[b2.find("/10.")+8] == "/":
