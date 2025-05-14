@@ -245,6 +245,26 @@ def get_pages_using_lynx(url, journal):
             pages = ft[:ft.find('"')]
             return pages
 
+
+    journals_type_2 = ['Science',
+                      ]
+
+
+    if journal in journals_type_2:
+        s = subprocess.run(['lynx', '--source', url], 
+                           stdout=subprocess.PIPE, stderr=subprocess.PIPE, 
+                           text=True, check=True)
+
+        ft = s.stdout
+
+        if ft.find('<meta name="dc.Identifier" scheme="publisher-id" content="') > -1:
+            ft = ft[ft.find('<meta name="dc.Identifier" scheme="publisher-id" content="')+58:]
+            pages = ft[:ft.find('"')]
+            ft = ft[ft.find('Cite as')+7:]
+            if ft.find('e' + pages) > -1:
+                return 'e' + pages
+
+
     return None
 
 
@@ -536,6 +556,7 @@ def process_bibfile():
                                      'Advanced Functional Materials',
                                      'Advanced Materials Interfaces',
                                      'Small',
+                                     'Advanced Science',
                                      ]
 
             for mpj3 in manual_page_journals3:
@@ -585,6 +606,7 @@ def process_bibfile():
                                           'Review of Scientific Instruments',
                                           'Journal of Applied Physics',
                                           'The Journal of Chemical Physics',
+                                          'Science',
                                           ]
 
             if EXPERIMENTAL:
