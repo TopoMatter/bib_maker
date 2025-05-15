@@ -557,6 +557,7 @@ def process_bibfile():
                                      'Advanced Materials Interfaces',
                                      'Small',
                                      'Advanced Science',
+                                     'Annalen der Physik',
                                      ]
 
             for mpj3 in manual_page_journals3:
