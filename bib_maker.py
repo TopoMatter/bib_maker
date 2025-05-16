@@ -603,6 +603,7 @@ def process_bibfile():
             # scraping some of the websites does not work directly in urlopen
             # so we use the terminal browser lynx
             experimental_page_journals = ['Applied Physics Letters',
+                                          'Applied Physics Reviews',
                                           'Journal of Mathematical Physics',
                                           'AIP Advances',
                                           'Review of Scientific Instruments',
