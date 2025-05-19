@@ -273,18 +273,32 @@ def get_pages_using_crossref(url, journal):
     """
     """
 
-    os.system('curl -L -iH "Accept: application/vnd.crossref.unixsd+xml" ' +
-              url + ' > temp.temp')
+    # lazy way
+    # os.system('curl -L -iH "Accept: application/vnd.crossref.unixsd+xml" ' +
+              # url + ' > temp.temp')
+    # myfile = open('temp.temp', 'r')
+
+    # for myline in myfile.readlines():
+        # if(myline.find('"article_number">') > -1):
+            # pages = myline[myline.find('"article_number">')+17:]
+            # pages = pages[:pages.find('<')]
+            # return pages
 
 
-    myfile = open('temp.temp', 'r')
+    # smarter way?
+    result = subprocess.run(
+        ["curl", "-s", "-L", "-iH", 
+         "Accept: application/vnd.crossref.unixsd+xml", url],
+         stdout=subprocess.PIPE,
+         stderr=subprocess.PIPE,
+         check=True,
+         text=True
+        )
 
-    for myline in myfile.readlines():
-        if(myline.find('"article_number">') > -1):
-            pages = myline[myline.find('"article_number">')+17:]
-            pages = pages[:pages.find('<')]
-            return pages
-
+    if result.stdout.find('"article_number">') > -1:
+        pages = result[result.stdout.find('"article_number">')+17:]
+        pages = pages[:pages.find('<')]
+        return pages
 
     return None
 
