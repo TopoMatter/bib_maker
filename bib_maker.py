@@ -300,6 +300,11 @@ def get_pages_using_crossref(url, journal):
         pages = pages[:pages.find('<')]
         return pages
 
+    if result.stdout.find('"article-number">') > -1:
+        pages = result.stdout[result.stdout.find('"article-number">')+17:]
+        pages = pages[:pages.find('<')]
+        return pages
+
     return None
 
 
@@ -589,6 +594,7 @@ def process_bibfile():
                                      'Small',
                                      'Advanced Science',
                                      'Annalen der Physik',
+                                     'Laser &amp; Photonics Reviews'
                                      ]
 
             for mpj3 in manual_page_journals3:
@@ -601,7 +607,6 @@ def process_bibfile():
 
 
             # in some cases, get the pages by scraping the journal site
-            # "Light: Science" stands for "Light: Science \&amp; Applications"
             scraping_page_journals = ['Nature Communications', 
                                       'Communications Physics',
                                       'npj Quantum Materials',
@@ -615,7 +620,7 @@ def process_bibfile():
                                       'Frontiers of Physics',
                                       'Nature Reviews Materials',
                                       'Quantum Frontiers',
-                                      'Light: Science',
+                                      'Light: Science &amp; Applications',
                                       ]
 
             for spj in scraping_page_journals:
@@ -643,6 +648,9 @@ def process_bibfile():
                                           'Science',
                                           'Proceedings of the National Academy of Sciences',
                                           'Science',
+                                          'Philosophical Transactions of the Royal Society',
+                                          'National Science Review',
+                                          'Communications Materials',
                                           ]
 
             if EXPERIMENTAL:
