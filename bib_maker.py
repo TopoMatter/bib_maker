@@ -296,7 +296,7 @@ def get_pages_using_crossref(url, journal):
         )
 
     if result.stdout.find('"article_number">') > -1:
-        pages = result[result.stdout.find('"article_number">')+17:]
+        pages = result.stdout[result.stdout.find('"article_number">')+17:]
         pages = pages[:pages.find('<')]
         return pages
 
