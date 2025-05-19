@@ -222,6 +222,7 @@ def get_DOI_using_lynx(url, site_type):
     return 'DOI_NOT_FOUND'
 
 
+# NOT USED ANYMORE
 def get_pages_using_lynx(url, journal):
     """
     """
@@ -263,6 +264,26 @@ def get_pages_using_lynx(url, journal):
             ft = ft[ft.find('Cite as')+7:]
             if ft.find('e' + pages) > -1:
                 return 'e' + pages
+
+
+    return None
+
+
+def get_pages_using_crossref(url, journal):
+    """
+    """
+
+    os.system('curl -L -iH "Accept: application/vnd.crossref.unixsd+xml" ' +
+              url + ' > temp.temp')
+
+
+    myfile = open('temp.temp', 'r')
+
+    for myline in myfile.readlines():
+        if(myline.find('"article_number">') > -1):
+            pages = myline[myline.find('"article_number">')+17:]
+            pages = pages[:pages.find('<')]
+            return pages
 
 
     return None
@@ -537,10 +558,6 @@ def process_bibfile():
                                                                ]
 
             # some pages need extra work when they are manually added
-            # 'Proceedings of the National Academy of Sciences' has been
-            # removed from this list because different articles have different
-            # page formats
-            # same for 'Science'.
             manual_page_journals2 = ['Science Advances',
                                     ]
 
@@ -610,13 +627,15 @@ def process_bibfile():
                                           'Journal of Applied Physics',
                                           'The Journal of Chemical Physics',
                                           'Science',
+                                          'Proceedings of the National Academy of Sciences',
+                                          'Science',
                                           ]
 
             if EXPERIMENTAL:
                 for epj in experimental_page_journals:
                     if (bib_entry.entries[label].fields['journal'].find(
                                                                     epj) == 0):
-                        pages = get_pages_using_lynx('http://dx.doi.org/' 
+                        pages = get_pages_using_crossref('http://dx.doi.org/' 
                                                      + DOI, epj)
                         if pages is not None:
                             bib_entry.entries[label].fields['pages'] = pages
