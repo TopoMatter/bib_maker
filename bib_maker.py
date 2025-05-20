@@ -651,6 +651,7 @@ def process_bibfile():
                                           'Philosophical Transactions of the Royal Society',
                                           'National Science Review',
                                           'Communications Materials',
+                                          'Letters in Mathematical Physics',
                                           ]
 
             if EXPERIMENTAL:
