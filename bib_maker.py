@@ -593,6 +593,7 @@ def process_bibfile():
                                      'Advanced Materials Interfaces',
                                      'Small',
                                      'Advanced Science',
+                                     'Advanced Physics Research',
                                      'Annalen der Physik',
                                      'Laser &amp; Photonics Reviews'
                                      ]
