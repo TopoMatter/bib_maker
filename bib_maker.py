@@ -140,10 +140,13 @@ def abbreviate_journal_names(bibfile):
     """
     bib = parse_file(bibfile)
 
+
+    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+    file_path = os.path.join(SCRIPT_DIR, 'journal_abbreviations.csv')
     # updated version of the file found at:
     # https://abbrv.jabref.org/journals/journal_abbreviations_geology_physics.csv
     abbreviations = pandas.read_csv(
-        "journal_abbreviations.csv",
+        file_path,
         on_bad_lines="skip",
         sep=',',
         names=["abbr", "o1", "o2"],
