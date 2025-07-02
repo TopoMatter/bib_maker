@@ -617,6 +617,7 @@ def process_bibfile():
                                       'npj Computational Materials',
                                       'npj Quantum Information',
                                       'npj Nanophotonics',
+                                      'npj Spintronics',
                                       'Science China Physics, Mechanics',
                                       'The European Physical Journal',
                                       'Journal of High Energy Physics', 
