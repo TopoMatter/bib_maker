@@ -563,12 +563,9 @@ def process_bibfile():
         if ("pages" not in bib_entry.entries[label].fields) and \
            (output[:8] == "@article"):
             # manually add pages for some papers
-            manual_page_journals = ['Physical Review', 
-                                    'Reviews of Modern Physics',
-                                    'SciPost Physics',
+            manual_page_journals = ['SciPost Physics',
                                     'Journal of the Physical Society of Japan',
-                                    'PRX Quantum',
-                                    'Advances in Physics: X',
+                                    'Advances in Physics: X'
                                     ]
 
             for mpj in manual_page_journals:
@@ -625,7 +622,7 @@ def process_bibfile():
                                       'Frontiers of Physics',
                                       'Nature Reviews Materials',
                                       'Quantum Frontiers',
-                                      'Light: Science &amp; Applications',
+                                      'Light: Science &amp; Applications'
                                       ]
 
             for spj in scraping_page_journals:
@@ -642,7 +639,7 @@ def process_bibfile():
                         pass
 
             # scraping some of the websites does not work directly in urlopen
-            # so we use the terminal browser lynx
+            # so we use crossref
             experimental_page_journals = ['Applied Physics Letters',
                                           'Applied Physics Reviews',
                                           'Journal of Mathematical Physics',
@@ -657,6 +654,9 @@ def process_bibfile():
                                           'National Science Review',
                                           'Communications Materials',
                                           'Letters in Mathematical Physics',
+                                          'Physical Review', 
+                                          'Reviews of Modern Physics',
+                                          'PRX Quantum'
                                           ]
 
             if EXPERIMENTAL:
