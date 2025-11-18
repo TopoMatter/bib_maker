@@ -308,6 +308,11 @@ def get_pages_using_crossref(url, journal):
         pages = pages[:pages.find('<')]
         return pages
 
+    if result.stdout.find('"citation_firstpage" content="') > -1:
+        pages = result.stdout[result.stdout.find('"citation_firstpage" content="')+30:]
+        pages = pages[:pages.find('"')]
+        return pages
+
     return None
 
 
@@ -656,7 +661,8 @@ def process_bibfile():
                                           'Letters in Mathematical Physics',
                                           'Physical Review', 
                                           'Reviews of Modern Physics',
-                                          'PRX Quantum'
+                                          'PRX Quantum',
+                                          'Nanoscale Research Letters'
                                           ]
 
             if EXPERIMENTAL:
