@@ -662,7 +662,8 @@ def process_bibfile():
                                           'Physical Review', 
                                           'Reviews of Modern Physics',
                                           'PRX Quantum',
-                                          'Nanoscale Research Letters'
+                                          'Nanoscale Research Letters',
+                                          'Journal of Nanoparticle Research'
                                           ]
 
             if EXPERIMENTAL:
