@@ -1,4 +1,4 @@
-# Copyright (c) 2025, I. C. Fulga. All rights reserved.
+# Copyright (c) 2026, I. C. Fulga. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -26,16 +26,19 @@
 
 
 import pandas
-import numpy as np
 import sys
 import subprocess
 import getopt
 import pybtex
 import string
-from pybtex.database import parse_file, BibliographyData, Entry
+from pybtex.database import parse_file
 from urllib.request import urlopen
 import re
 import os
+import requests
+
+from pybtex import errors
+errors.set_strict_mode(False)
 
 alphabet = string.ascii_lowercase
 
@@ -62,14 +65,11 @@ Options:
 
   -v, --verbose         Print text showing current progress.
 
-  -e, --experimental    Use the `lynx' terminal browser to scrape some journal
-                        websites that cannot be easily accessed using urlopen.
-
   -f, --force           Proceed with processing the DOIs even if not all were
                         found in the bib file.
 
 Note:
-  - This has been written using pybtex version 0.24.0
+  - This has been written using pybtex version 0.26.0
   - If you find that some journal abbreviations are missing, please help me
     complete the list.
 
@@ -90,9 +90,6 @@ if DEBUG_MODE:
     FORCE = True
 
 
-### SET THIS TO TRUE AT YOUR OWN PERIL !!! ###
-EXPERIMENTAL = True
-
 def rtfm(s):
     print( "bib_maker:", s)
     print( "Try 'bib_maker --help' for more information.")
@@ -100,14 +97,11 @@ def rtfm(s):
 
 
 def parse_args():
-    global BIB_FILE, INPUT_FILE, OVERWRITE, VERBOSE, EXPERIMENTAL, FORCE
+    global BIB_FILE, INPUT_FILE, OVERWRITE, VERBOSE, FORCE
 
     try:
-        opts, remaining_args = \
-            getopt.getopt(sys.argv[1:],
-                          "ohvef",
-                          ["overwrite", "help", "verbose",
-                           "experimental", "force"])
+        opts, remaining_args = getopt.getopt(sys.argv[1:], "ohvef",
+                                   ["overwrite", "help", "verbose", "force"])
     except getopt.GetoptError:
         rtfm("unrecognized option")
 
@@ -129,8 +123,6 @@ def parse_args():
             OVERWRITE = True
         if o in ("-v", "--verbose"):
             VERBOSE = True
-        if o in ("-e", "--experimental"):
-            EXPERIMENTAL = True
         if o in ("-f", "--force"):
             FORCE = True
 
@@ -199,96 +191,27 @@ def get_DOI_from_arXiv(b2):
     return DOI
 
 
-def get_DOI_using_lynx(url, site_type):
+def get_DOI_from_pii(pii):
     """
     """
-    sites_type_1 = ['sciencedirect.com',
-                    ]
+    DOI = 'DOI_NOT_FOUND'
+    
+    url = "https://api.crossref.org/works"
+    params = {"query": pii}
+    r = requests.get(url, params=params)
+    data = r.json()
 
-    if site_type in sites_type_1:
-        os.system('lynx --source "' + url +
-                  '" > temppage.html')
+    for item in data["message"]["items"]:
+        # crude filter: check if PII appears in metadata
+        if pii.lower() in str(item).lower():
+            DOI = item["DOI"]
 
-        journalsite = open('temppage.html', 'r')
-        ft = ""
-        for myline in journalsite.readlines():
-            ft += myline
-
-        journalsite.close()
-        os.system('rm temppage.html')
-
-        if ft.find('<meta name="citation_doi" content="') > -1:
-            ft = ft[ft.find('<meta name="citation_doi" content="')+35:]
-            DOI = ft[:ft.find('"')]
-            return DOI
-
-    return 'DOI_NOT_FOUND'
-
-
-# NOT USED ANYMORE
-def get_pages_using_lynx(url, journal):
-    """
-    """
-    journals_type_1 = ['Applied Physics Letters',
-                       'Journal of Mathematical Physics',
-                       'AIP Advances',
-                       'Review of Scientific Instruments',
-                       'Journal of Applied Physics',
-                       'The Journal of Chemical Physics',
-                      ]
-
-    if journal in journals_type_1:
-        s = subprocess.run(['lynx', '--source', url], 
-                           stdout=subprocess.PIPE, stderr=subprocess.PIPE, 
-                           text=True, check=True)
-
-        ft = s.stdout
-
-        if ft.find('"pageStart":"') > -1:
-            ft = ft[ft.find('"pageStart":"')+13:]
-            pages = ft[:ft.find('"')]
-            return pages
-
-
-    journals_type_2 = ['Science',
-                      ]
-
-
-    if journal in journals_type_2:
-        s = subprocess.run(['lynx', '--source', url], 
-                           stdout=subprocess.PIPE, stderr=subprocess.PIPE, 
-                           text=True, check=True)
-
-        ft = s.stdout
-
-        if ft.find('<meta name="dc.Identifier" scheme="publisher-id" content="') > -1:
-            ft = ft[ft.find('<meta name="dc.Identifier" scheme="publisher-id" content="')+58:]
-            pages = ft[:ft.find('"')]
-            ft = ft[ft.find('Cite as')+7:]
-            if ft.find('e' + pages) > -1:
-                return 'e' + pages
-
-
-    return None
+    return DOI
 
 
 def get_pages_using_crossref(url, journal):
     """
     """
-
-    # lazy way
-    # os.system('curl -L -iH "Accept: application/vnd.crossref.unixsd+xml" ' +
-              # url + ' > temp.temp')
-    # myfile = open('temp.temp', 'r')
-
-    # for myline in myfile.readlines():
-        # if(myline.find('"article_number">') > -1):
-            # pages = myline[myline.find('"article_number">')+17:]
-            # pages = pages[:pages.find('<')]
-            # return pages
-
-
-    # smarter way?
     result = subprocess.run(
         ["curl", "-s", "-L", "-iH", 
          "Accept: application/vnd.crossref.unixsd+xml", url],
@@ -334,7 +257,6 @@ def extract_input_from_bbl(bblfilename,
     for myline in infile.readlines():
         fulltext += myline
 
-
     infile.close()
 
     finished = False
@@ -373,6 +295,7 @@ def extract_input_from_bbl(bblfilename,
         elif bibitem.find("\\href") > -1:
             b2 = bibitem[bibitem.find("\\href")+5:]
             b2 = b2[:b2.find("}")]
+
             # maybe the URL contains the DOI in it
             if b2.find("doi.org/") > -1:
                 b2 = b2[b2.find("doi.org/")+8:]
@@ -381,7 +304,6 @@ def extract_input_from_bbl(bblfilename,
                 if DOI.lower().find('arxiv') > -1:
                     DOI = DOI[DOI.lower().find('arxiv'):]
                     DOI = get_DOI_from_arXiv(DOI)
-
 
             elif b2.find("/10.") > -1 and b2[b2.find("/10.")+8] == "/":
                 b2 = b2[b2.find("/10.")+1:]
@@ -393,7 +315,6 @@ def extract_input_from_bbl(bblfilename,
                 if DOI.lower().find('arxiv') > -1:
                     DOI = DOI[DOI.lower().find('arxiv'):]
                     DOI = get_DOI_from_arXiv(b2)
-
 
                 # trim extra bits after the DOI in the URL
                 if DOI.rfind("&") > -1:
@@ -420,12 +341,15 @@ def extract_input_from_bbl(bblfilename,
 
                 DOI = '10.1038/' + b2
 
-            elif b2.find('sciencedirect.com') > -1:
-                if EXPERIMENTAL:
-                    if b2.find('{') > -1:
-                        b2 = b2[b2.find('{')+1:]
+            # maybe the URL has a pii that can be used to extract the DOI
+            elif b2.find('/pii/') > -1:
+                b2 = b2[b2.find('/pii/')+5:]
+                
+                # strip the bit after the pii code
+                if b2.find("?") > -1:
+                    b2 = b2[:b2.find("?")]
 
-                    DOI = get_DOI_using_lynx(b2.strip(), 'sciencedirect.com')
+                DOI = get_DOI_from_pii(b2)
 
         # DOI not found using href, but there is an Eprint
         if DOI == 'DOI_NOT_FOUND' and bibitem.find("\\Eprint") > -1:
@@ -447,7 +371,6 @@ def extract_input_from_bbl(bblfilename,
         if VERBOSE:
             print(label, DOI)
 
-
     outfile = open(outfilename, 'w')
     for ind in range(len(all_labels)):
         print(all_labels[ind], all_DOIs[ind], file=outfile)
@@ -455,13 +378,12 @@ def extract_input_from_bbl(bblfilename,
     outfile.close()
 
     if ("DOI_NOT_FOUND" in all_DOIs) and (FORCE == False):
-        rtfm("couldn't find all DOIs. Input file needs manual cleanup.")
+        rtfm("couldn't find all DOIs. Input file (temp.txt) needs manual cleanup.")
 
 
 def process_bibfile():
     """
     """
-
     if VERBOSE:
         print('### Processing input file')
         print()
@@ -474,8 +396,8 @@ def process_bibfile():
         outfile = open(BIB_FILE, 'a')
 
     all_labels = []
-
     missing_pages = []
+    broken_DOIs = []
 
     for myline in myfile.readlines():
         if len(myline) < 2 or myline[0] == '#': # empty line or comment
@@ -496,6 +418,8 @@ def process_bibfile():
             DOI = DOI[DOI.lower().find('doi.org')+8:]
 
         if DOI == 'DOI_NOT_FOUND':
+            if label is not None:
+                broken_DOIs.append(label)
             continue
 
         exitcode, output = subprocess.getstatusoutput(
@@ -611,7 +535,6 @@ def process_bibfile():
                            bib_entry.entries[label].fields['DOI'].rfind('.')+3:
                                                                ]
 
-
             # in some cases, get the pages by scraping the journal site
             scraping_page_journals = ['Nature Communications', 
                                       'Communications Physics',
@@ -645,35 +568,34 @@ def process_bibfile():
 
             # scraping some of the websites does not work directly in urlopen
             # so we use crossref
-            experimental_page_journals = ['Applied Physics Letters',
-                                          'Applied Physics Reviews',
-                                          'Journal of Mathematical Physics',
-                                          'AIP Advances',
-                                          'Review of Scientific Instruments',
-                                          'Journal of Applied Physics',
-                                          'The Journal of Chemical Physics',
-                                          'Science',
-                                          'Proceedings of the National Academy of Sciences',
-                                          'Science',
-                                          'Philosophical Transactions of the Royal Society',
-                                          'National Science Review',
-                                          'Communications Materials',
-                                          'Letters in Mathematical Physics',
-                                          'Physical Review', 
-                                          'Reviews of Modern Physics',
-                                          'PRX Quantum',
-                                          'Nanoscale Research Letters',
-                                          'Journal of Nanoparticle Research'
-                                          ]
+            crossref_page_journals = ['Applied Physics Letters',
+                                      'Applied Physics Reviews',
+                                      'Journal of Mathematical Physics',
+                                      'AIP Advances',
+                                      'Review of Scientific Instruments',
+                                      'Journal of Applied Physics',
+                                      'The Journal of Chemical Physics',
+                                      'Science',
+                                      'Proceedings of the National Academy of Sciences',
+                                      'Science',
+                                      'Philosophical Transactions of the Royal Society',
+                                      'National Science Review',
+                                      'Communications Materials',
+                                      'Letters in Mathematical Physics',
+                                      'Physical Review', 
+                                      'Reviews of Modern Physics',
+                                      'PRX Quantum',
+                                      'Nanoscale Research Letters',
+                                      'Journal of Nanoparticle Research'
+                                      ]
 
-            if EXPERIMENTAL:
-                for epj in experimental_page_journals:
-                    if (bib_entry.entries[label].fields['journal'].find(
-                                                                    epj) == 0):
-                        pages = get_pages_using_crossref('http://dx.doi.org/' 
-                                                     + DOI, epj)
-                        if pages is not None:
-                            bib_entry.entries[label].fields['pages'] = pages
+            for cpj in crossref_page_journals:
+                if (bib_entry.entries[label].fields['journal'].find(
+                                                                cpj) == 0):
+                    pages = get_pages_using_crossref('http://dx.doi.org/' 
+                                                     + DOI, cpj)
+                    if pages is not None:
+                        bib_entry.entries[label].fields['pages'] = pages
 
         # fix capitalization in titles
         try:
@@ -681,7 +603,6 @@ def process_bibfile():
                 bib_entry.entries[label].fields["title"] + "}"
         except:
             pass
-
 
         # check if titles have mml:math and change to regular text
         if "title" in bib_entry.entries[label].fields:
@@ -722,33 +643,15 @@ def process_bibfile():
 
     outfile.close()
 
+    if len(broken_DOIs) > 0:
+        print("### Could not find DOIs for the following labels:")
+        for brokenDOI in broken_DOIs:
+            print(brokenDOI)
+
     if len(missing_pages) > 0:
         print("### Could not fill in 'pages' field for:")
         for myitem in missing_pages:
             print(myitem[0], myitem[1])
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 def main():
