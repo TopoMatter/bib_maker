@@ -586,7 +586,8 @@ def process_bibfile():
                                       'Reviews of Modern Physics',
                                       'PRX Quantum',
                                       'Nanoscale Research Letters',
-                                      'Journal of Nanoparticle Research'
+                                      'Journal of Nanoparticle Research',
+                                      'physica status solidi'
                                       ]
 
             for cpj in crossref_page_journals:
