@@ -649,10 +649,14 @@ def process_bibfile():
         for brokenDOI in broken_DOIs:
             print(brokenDOI)
 
+        print()
+
     if len(missing_pages) > 0:
         print("### Could not fill in 'pages' field for:")
         for myitem in missing_pages:
             print(myitem[0], myitem[1])
+
+        print()
 
 
 def main():
