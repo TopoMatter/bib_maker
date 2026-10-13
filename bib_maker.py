@@ -400,7 +400,11 @@ def process_bibfile():
     broken_DOIs = []
 
     for myline in myfile.readlines():
-        if len(myline) < 2 or myline[0] == '#': # empty line or comment
+        if myline[0] == '#': # keep comments in the bib file
+            print(myline, file=outfile)
+            continue
+
+        if len(myline) < 2: # skip empty lines
             continue
 
         mysplit = myline.split(' ')
