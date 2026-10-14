@@ -398,6 +398,7 @@ def process_bibfile():
     all_labels = []
     missing_pages = []
     broken_DOIs = []
+    all_DOIs = []
 
     for myline in myfile.readlines():
         if myline[0] == '#': # keep comments in the bib file
@@ -425,6 +426,12 @@ def process_bibfile():
             if label is not None:
                 broken_DOIs.append(label)
             continue
+
+        if DOI.lower() in all_DOIs:
+            print('# repeated DOI: ' + DOI.lower())
+            continue
+
+        all_DOIs.append(DOI.lower())
 
         exitcode, output = subprocess.getstatusoutput(
                 f'curl -LH "Accept: application/x-bibtex" "http://dx.doi.org/' 
