@@ -128,8 +128,25 @@ def parse_args():
 
 
 def abbreviate_journal_names(bibfile):
-    """ From Anton.
+    """ From Anton. Updated by me to keep the comments in the bib file.
     """
+
+    # Store the original comments and their position
+    
+    with open(bibfile, "r", encoding="utf-8") as f:
+        lines = f.readlines()
+
+    comments = []
+    entry_count = 0
+
+    for line in lines:
+        if line.lstrip().startswith("%"):
+            comments.append((entry_count, line))
+        elif re.match(r"\s*@", line):
+            entry_count += 1
+
+    # Start the journal abbreviation process
+
     bib = parse_file(bibfile)
 
 
@@ -164,6 +181,34 @@ def abbreviate_journal_names(bibfile):
             print(f"{item.fields['journal']} not in list")
 
     bib.to_file(bibfile)
+
+    # Add the comments back
+
+    with open(bibfile, "r", encoding="utf-8") as f:
+        new_lines = f.readlines()
+
+    result = []
+    entry_count = 0
+    comments_by_entry = {}
+
+    for count, comment in comments:
+        comments_by_entry.setdefault(count, []).append(comment)
+
+    for line in new_lines:
+        if re.match(r"\s*@", line):
+            for comment in comments_by_entry.get(entry_count, []):
+                result.append(comment)
+                result.append('\n')
+
+            entry_count += 1
+
+        result.append(line)
+
+    for comment in comments_by_entry.get(entry_count, []):
+        result.append(comment)
+
+    with open(bibfile, "w", encoding="utf-8") as f:
+        f.writelines(result)
 
 
 def get_DOI_from_arXiv(b2):
@@ -402,7 +447,9 @@ def process_bibfile():
 
     for myline in myfile.readlines():
         if myline[0] == '#': # keep comments in the bib file
-            print(myline, file=outfile)
+            print(re.sub(r"^#+", lambda m: "%" * len(m.group()), myline),
+                    file=outfile)
+            print('', file=outfile)
             continue
 
         if len(myline) < 2: # skip empty lines
